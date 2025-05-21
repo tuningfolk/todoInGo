@@ -1,7 +1,7 @@
 ### Driver
 Piece of software(go package) that knows how to:
 - establish a network/local connection to a specific type of database
-- translate Go's `database/sql` interface calls into the actual database (wire protocol)[####Wire Protocol] and queries
+- translate Go's `database/sql` interface calls into the actual database (wire protocol)[####Wire-Protocol] and queries
 - marshal/unmarshal Go values into/from database-specific types
 
 #### Wire Protocol
