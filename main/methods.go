@@ -82,7 +82,7 @@ func AddTask(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(message))
 }
 
-func Complete(w http.ResponseWriter, r *http.Request) {
+func CompleteTask(w http.ResponseWriter, r *http.Request) {
 	var message string
 	if r.Method == "GET" {
 		message = "GET/ complete not allowed"

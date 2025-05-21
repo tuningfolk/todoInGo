@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
@@ -17,7 +19,7 @@ func main() {
 	http.HandleFunc("/complete/", CompleteTask)
 	http.HandleFunc("/delete/", Delete)
 
-	http.Handle("/static/", http.Fileserver(http.Dir("public")))
+	http.Handle("/static/", http.FileServer(http.Dir("public")))
 	log.Print("running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
