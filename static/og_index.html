@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Post</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    input, textarea { width: 100%; margin: 10px 0; padding: 8px; font-size: 16px; }
+    button { padding: 10px 20px; font-size: 16px; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Create a Post</h2>
+  <label>Title</label>
+  <input id="title" type="text" placeholder="Post title">
+
+  <label>Body</label>
+  <textarea id="body" rows="4" placeholder="Post body"></textarea>
+
+  <label>User ID</label>
+  <input id="user_id" type="number" placeholder="User ID">
+
+  <button onclick="submitPost()">Submit</button>
+  <div id="posts">Loading posts...</div>
+
+
+  <p id="result"></p>
+
+  <script>
+    async function fetchPosts() {
+        try {
+            const res = await fetch("http://127.0.0.1:8080/api/posts");
+            if (!res.ok) throw new Error("Fetch failed");
+            const posts = await res.json();
+            const container = document.getElementById("posts");
+            container.innerHTML = ""; // Clear existing
+            posts.forEach(p => {
+                const div = document.createElement("div");
+                div.innerHTML = `<h3>${p.title}</h3><p>${p.body}</p><hr>`;
+                container.appendChild(div);
+            });
+        } catch (e) {
+            console.error("Failed to load posts:", e);
+        }
+    }
+    
+    window.onload = fetchPosts;
+   async function submitPost() {
+      const title = document.getElementById("title").value;
+      const body = document.getElementById("body").value;
+      const user_id = parseInt(document.getElementById("user_id").value, 10);
+
+      const data = {
+        title,
+        body,
+        user_id
+      };
+
+      try {
+        const res = await fetch("http://127.0.0.1:8080/add/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = document.getElementById("result");
+        if (res.ok) {
+          result.textContent = "✅ Post submitted successfully!";
+          result.className = "success";
+        } else {
+          result.textContent = `❌ Failed: ${res.status}`;
+          result.className = "error";
+        }
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ Error: " + err;
+        document.getElementById("result").className = "error";
+      }
+    }
+  </script>
+</body>
+</html>
+

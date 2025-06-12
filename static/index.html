@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Modern Todo App</title>
+  <style>
+    :root {
+      --bg: #f9f9fb;
+      --card: #ffffff;
+      --accent: #6366f1;
+      --text: #111827;
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 4px 14px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="dark"] {
+      --bg: #111827;
+      --card: #1f2937;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --shadow: 0 4px 14px rgba(255,255,255,0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .drag{
+	    margin-left: auto;
+	    margin-right:0;
+    }
+
+    .container {
+      background-color: var(--card);
+      padding: 32px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    input, textarea {
+      width: 100%;
+      margin-top: 6px;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: var(--radius);
+      background-color: #f3f4f6;
+      color: var(--text);
+      transition: border-color 0.2s ease;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    button {
+      margin-top: 24px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      background-color: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    #result {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+
+    #posts {
+      margin-top: 40px;
+    }
+
+    .post {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      background: var(--bg);
+      transition: background 0.3s, opacity 0.3s;
+    }
+
+    .post.completed {
+      opacity: 0.5;
+    }
+
+    .post.completed h3 {
+      text-decoration: line-through;
+    }
+
+    .post h3 {
+      font-size: 18px;
+    }
+
+    .checkmark-btn {
+      appearance: none;
+      background-color: #f3f4f6;
+      border: 2px solid #d1d5db;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .checkmark-btn:checked {
+      background-color: #10b981;
+      border-color: #10b981;
+    }
+
+    .checkmark-btn:checked:after {
+      content: '✓';
+      color: white;
+      font-size: 14px;
+      position: absolute;
+      left: 5px;
+      top: -1px;
+    }
+
+    .toolbar {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .filter-btn {
+      font-size: 14px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 8px;
+    }
+
+    .theme-toggle {
+      background: var(--card);
+      border: 1px solid #d1d5db;
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create a Post</h2>
+
+    <label for="title">Title</label>
+    <input id="title" type="text" placeholder="Post title" />
+
+    <label for="body">Body</label>
+    <textarea id="body" rows="4" placeholder="Post body"></textarea>
+
+    <label for="user_id">User ID</label>
+    <input id="user_id" type="number" placeholder="User ID" />
+
+    <button onclick="submitPost()">Submit</button>
+
+    <div class="toolbar">
+      <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+      <div>
+        <button class="filter-btn" onclick="filterPosts('all')">All</button>
+        <button class="filter-btn" onclick="filterPosts('completed')">Completed</button>
+        <button class="filter-btn" onclick="filterPosts('active')">Active</button>
+      </div>
+    </div>
+
+    <p id="result"></p>
+    <div id="posts"></div>
+  </div>
+  <div>
+	  <a target="_blank" href="https://icons8.com/icon/Wth5WHNwKYhx/drag-handle">Drag Handle</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+  </div>
+
+  <script>
+    let currentFilter = 'all';
+
+    function toggleTheme() {
+      const theme = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'light' : 'dark');
+    }
+
+    async function fetchPosts() {
+      try {
+        const res = await fetch("http://127.0.0.1:8080/api/posts");
+        if (!res.ok) throw new Error("Fetch failed");
+        const posts = await res.json();
+        renderPosts(posts);
+      } catch (e) {
+        console.error("Failed to load posts:", e);
+      }
+    }
+
+    function renderPosts(posts) {
+      const container = document.getElementById("posts");
+      container.innerHTML = "";
+
+      posts
+        .filter(p => {
+          if (currentFilter === 'completed') return p.completed;
+          if (currentFilter === 'active') return !p.completed;
+          return true;
+        })
+        .forEach(p => {
+          const div = document.createElement("div");
+          div.className = `post ${p.completed ? 'completed' : ''}`;
+          div.setAttribute('draggable', 'true');
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "checkmark-btn";
+          checkbox.checked = p.completed;
+          checkbox.onchange = async () => {
+            await fetch("http://127.0.0.1:8080/api/completed/", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ post_id: p.post_id, completed: checkbox.checked })
+            });
+            fetchPosts();
+          };
+
+          const content = document.createElement("div");
+          content.className = "post-content";
+          content.innerHTML = `<h3>${p.title}</h3><p>${p.body}</p>`;
+	  
+	  const drag = document.createElement("div");
+	  drag.className = "drag";
+	  drag.innerHTML = `<img width="16" height="16" src="https://img.icons8.com/ios/16/drag-handle.png" alt="drag-handle"/>`
+
+          div.appendChild(checkbox);
+          div.appendChild(content);
+	  div.appendChild(drag);
+          container.appendChild(div);
+        });
+
+      addDragDrop();
+    }
+
+    function filterPosts(type) {
+      currentFilter = type;
+      fetchPosts();
+    }
+
+    async function submitPost() {
+      const title = document.getElementById("title").value;
+      const body = document.getElementById("body").value;
+      const user_id = parseInt(document.getElementById("user_id").value, 10);
+
+      const data = { title, body, user_id };
+
+      try {
+        const res = await fetch("http://127.0.0.1:8080/api/add/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = document.getElementById("result");
+        if (res.ok) {
+          result.textContent = "✅ Post submitted successfully!";
+          result.className = "success";
+        } else {
+          result.textContent = `❌ Failed: ${res.status}`;
+          result.className = "error";
+        }
+
+        fetchPosts();
+      } catch (err) {
+        document.getElementById("result").textContent = "❌ Error: " + err;
+        document.getElementById("result").className = "error";
+      }
+    }
+
+    function addDragDrop() {
+      const draggables = document.querySelectorAll('.post');
+      const container = document.getElementById("posts");
+
+      draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+          draggable.classList.add('dragging');
+        });
+
+        draggable.addEventListener('dragend', () => {
+          draggable.classList.remove('dragging');
+        });
+      });
+
+      container.addEventListener('dragover', e => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(container, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (afterElement == null) {
+          container.appendChild(dragging);
+        } else {
+          container.insertBefore(dragging, afterElement);
+        }
+      });
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.post:not(.dragging)')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    window.onload = fetchPosts;
+  </script>
+</body>
+</html>
+
